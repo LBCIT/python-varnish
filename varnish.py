@@ -309,13 +309,12 @@ class VarnishManager(object):
 
     def run(self, *commands, **kwargs):
         threaded = kwargs.pop('threaded', False)
-        for server in self.servers:
-            if threaded:
-                [ThreadedRunner(server, *commands, **kwargs).start()
-                    for server in self.servers]
-            else:
-                return [run(server, *commands, **kwargs)
-                            for server in self.servers]
+        if threaded:
+            [ThreadedRunner(server, *commands, **kwargs).start()
+                for server in self.servers]
+        else:
+            return [run(server, *commands, **kwargs)
+                        for server in self.servers]
 
     def help(self, *args):
         return run(self.servers[0], *('help',)+args)[0]

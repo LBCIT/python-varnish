@@ -39,10 +39,7 @@ from hashlib import sha256
 import logging
 
 
-logging.basicConfig(
-    level = logging.DEBUG,
-    format = '%(asctime)s %(levelname)s %(message)s',
-)
+logger = logging.getLogger(__name__)
 
 def http_purge_url(url):
     """
@@ -56,7 +53,7 @@ def http_purge_url(url):
                        {'Host': '%s:%s' % (url.hostname, url.port) if url.port else url.hostname})
     response = connection.getresponse()
     if response.status != 200:
-        logging.error('Purge failed with status: %s' % response.status)
+        logger.error('Purge failed with status: %s' % response.status)
     return response
 
 class VarnishHandler(Telnet):
@@ -72,7 +69,7 @@ class VarnishHandler(Telnet):
         if status == 107 and secret is not None:
             self.auth(secret, content)
         elif status != 200:
-            logging.error('Connecting failed with status: %i' % status)
+            logger.error('Connecting failed with status: %i' % status)
 
     def _read(self):
         (status, length), content = map(int, self.read_until('\n').split()), ''
@@ -85,7 +82,7 @@ class VarnishHandler(Telnet):
         Run a command on the Varnish backend and return the result
         return value is a tuple of ((status, length), content)
         """
-        logging.debug('SENT: %s: %s' % (self.host, command))
+        logger.debug('SENT: %s: %s' % (self.host, command))
         self.write('%s\n' % command)
         while 1:
             buffer = self.read_until('\n').strip()
@@ -96,7 +93,7 @@ class VarnishHandler(Telnet):
         assert status == 200, 'Bad response code: {status} {text} ({command})'.format(status=status, text=self.read_until('\n').strip(), command=command)
         while len(content) < length:
             content += self.read_until('\n')
-        logging.debug('RECV: %s: %dB %s' % (status,length,content[:30]))
+        logger.debug('RECV: %s: %dB %s' % (status,length,content[:30]))
         self.read_eager()
         return (status, length), content
 
@@ -304,7 +301,7 @@ def run(addr, *commands, **kwargs):
 class VarnishManager(object):
     def __init__(self, servers):
         if not len(servers):
-            logging.warn('No servers found, please declare some')
+            logger.warn('No servers found, please declare some')
         self.servers = servers
 
     def run(self, *commands, **kwargs):

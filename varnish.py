@@ -41,6 +41,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+streamHandler.setFormatter(formatter)
+
+logger.addHandler(streamHandler)
+
 def http_purge_url(url):
     """
     Do an HTTP PURGE of the given asset.
